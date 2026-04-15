@@ -1,106 +1,87 @@
-# Контрольная работа №3 - Технологии разработки серверных приложений
+Контрольная работа номер 3
 
-**Студент:** [Коломоец Гордей Кириллович]  
-**Группа:** [ЭФБО-09-24]
+Студент: ваше имя
+Группа: ваша группа
 
----
+Установка и запуск
 
-## Описание
+Клонировать репозиторий:
+git clone ссылка-на-репозиторий
+cd control-work-3
 
-FastAPI приложение с аутентификацией, авторизацией и CRUD операциями.
-
-**Выполненные задания:** 6.2, 6.3, 6.4, 6.5, 7.1, 8.1, 8.2
-
----
-
-## Установка и запуск
-
-# Клонирование
-git clone <url>
-cd fastAPI-cr3
-
-# Виртуальное окружение
+Создать виртуальное окружение:
 python -m venv venv
-venv\Scripts\activate 
 
-# Зависимости
+Активировать окружение:
+Windows: venv\Scripts\activate
+Mac/Linux: source venv/bin/activate
+
+Установить зависимости:
 pip install -r requirements.txt
 
-# Создать .env из примера
+Создать файл .env из примера:
 cp .env.example .env
 
-# Запуск
+Запустить сервер:
 uvicorn main:app --reload
+или
+python -m uvicorn main:app --reload
 
-# Переменные окружения (.env)
-MODE=DEV
-DOCS_USERNAME=admin
-DOCS_PASSWORD=pass123
-SECRET_KEY=supersecretkey123
+Приложение запустится на http://localhost:8000
 
-# Тестирование
+Тестирование
 
-# 1. Basic Auth (Задание 6.2)
+Задание 6.2 Basic Auth
 
-# Регистрация
-curl -X POST http://localhost:8000/basic/register -H "Content-Type: application/json" -d "{\"username\": \"user1\", \"password\": \"pass123\"}"
+Регистрация:
+curl -X POST http://localhost:8000/basic/register -H "Content-Type: application/json" -d "{"username": "user1", "password": "pass123"}"
 
-# Логин
+Логин:
 curl -u user1:pass123 http://localhost:8000/basic/login
 
-# 2. JWT + Rate Limiting (Задание 6.4, 6.5)
+Задание 6.3 Отключение документации
 
-# Регистрация
-curl -X POST http://localhost:8000/register -H "Content-Type: application/json" -d "{\"username\": \"alice\", \"password\": \"qwerty123\"}"
+В файле .env по умолчанию MODE=DEV. Документация доступна по адресу http://localhost:8000/docs с логином и паролем из .env (admin/pass123).
 
-# Логин (получить токен)
-curl -X POST http://localhost:8000/login -H "Content-Type: application/json" -d "{\"username\": \"alice\", \"password\": \"qwerty123\"}"
+Если поменять в .env MODE=PROD и перезапустить сервер, то при открытии http://localhost:8000/docs вернется ошибка 404.
 
-# Защищённый ресурс
-curl -H "Authorization: Bearer ТОКЕН" http://localhost:8000/protected_resource
+Задание 6.5 JWT и Rate Limiting
 
-# 3. CRUD Todo (Задание 8.1, 8.2)
+Регистрация:
+curl -X POST http://localhost:8000/register -H "Content-Type: application/json" -d "{"username": "alice", "password": "qwerty"}"
 
-# Создать
-curl -X POST http://localhost:8000/todos -H "Authorization: Bearer ТОКЕН" -H "Content-Type: application/json" -d "{\"title\": \"Купить хлеб\"}"
+Логин:
+curl -X POST http://localhost:8000/login -H "Content-Type: application/json" -d "{"username": "alice", "password": "qwerty"}"
 
-# Получить
-curl -H "Authorization: Bearer ТОКЕН" http://localhost:8000/todos/1
+Ответ содержит access_token. Его нужно скопировать для следующих запросов.
 
-# Обновить
-curl -X PUT http://localhost:8000/todos/1 -H "Authorization: Bearer ТОКЕН" -H "Content-Type: application/json" -d "{\"completed\": true}"
+Защищенный ресурс:
+curl -H "Authorization: Bearer ПОЛУЧЕННЫЙ_ТОКЕН" http://localhost:8000/protected_resource
 
-# Удалить (только admin)
-curl -X DELETE http://localhost:8000/todos/1 -H "Authorization: Bearer ТОКЕН"
+Ограничения по частоте запросов: register 1 запрос в минуту, login 5 запросов в минуту. При превышении вернется 429 ошибка.
 
-# 4. RBAC (Задание 7.1)
+Задание 7.1 RBAC роли
 
-# Сделать пользователя админом (через SQLite)
-sqlite3 app.db "UPDATE users SET role='admin' WHERE username='alice';"
+Обычный пользователь имеет роль user. Чтобы проверить админские функции, нужно вручную изменить роль в базе данных:
 
-# Доступ к админ-панели
+sqlite3 app.db
+UPDATE users SET role = 'admin' WHERE username = 'alice';
+.exit
+
+После этого получить новый токен через login и проверить админские эндпоинты:
+
 curl -H "Authorization: Bearer ТОКЕН" http://localhost:8000/admin/dashboard
 
-# 5. Документация (Задание 6.3)
-DEV режим: http://localhost:8000/docs (логин/пароль из .env)
+Задание 8.2 CRUD для Todo
 
-PROD режим: http://localhost:8000/docs → 404
+Создать задачу:
+curl -X POST http://localhost:8000/todos -H "Authorization: Bearer ТОКЕН" -H "Content-Type: application/json" -d "{"title": "Купить хлеб"}"
 
-# Структура проекта
-├── main.py              # Основной код
-├── requirements.txt     # Зависимости
-├── .env.example         # Пример настроек
-├── .gitignore           # Игнорируемые файлы
-└── app.db               # SQLite БД (создаётся автоматически)
-Основные эндпоинты
-Метод	URL	Описание
-POST	/basic/register	Регистрация (Basic)
-GET	/basic/login	Вход (Basic)
-POST	/register	Регистрация (JWT)
-POST	/login	Вход (JWT)
-GET	/protected_resource	Защищённый ресурс
-GET	/admin/dashboard	Панель админа
-POST	/todos	Создать задачу
-GET	/todos/{id}	Получить задачу
-PUT	/todos/{id}	Обновить задачу
-DELETE	/todos/{id}	Удалить задачу
+Получить задачу:
+curl -H "Authorization: Bearer ТОКЕН" http://localhost:8000/todos/1
+
+Обновить задачу:
+curl -X PUT http://localhost:8000/todos/1 -H "Authorization: Bearer ТОКЕН" -H "Content-Type: application/json" -d "{"completed": true}"
+
+Удалить задачу (только admin):
+curl -X DELETE -H "Authorization: Bearer ТОКЕН" http://localhost:8000/todos/1
