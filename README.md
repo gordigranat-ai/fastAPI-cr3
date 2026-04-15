@@ -15,10 +15,9 @@ FastAPI приложение с аутентификацией, авториза
 
 ## Установка и запуск
 
-```bash
 # Клонирование
 git clone <url>
-cd control-work-3
+cd fastAPI-cr3
 
 # Виртуальное окружение
 python -m venv venv
